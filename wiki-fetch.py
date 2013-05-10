@@ -31,6 +31,6 @@ def link_words(wikitext):
 
   title_regex = re.compile('\[[^\[\]\|]*[|\]]')
   words_regex = re.compile('[^ |\\\\\[\]\(\)]+')
-  return [re.findall(words_regex, re.findall(title_regex, link)[0]) for link in links]
+  return [re.findall(words_regex, re.findall(title_regex, link.lower())[0]) for link in links]
 
 print(link_words(fetch('Eurasian lynx')))
