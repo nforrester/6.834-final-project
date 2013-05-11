@@ -52,3 +52,6 @@ $ load-db.py <dir>
 ```
 
 Where `<dir>` is the location where you downloaded the table dumps.
+
+After running `load-db.py`, you should restart the sever to reinitialize some of
+the global SQL variables that were changed for the import.

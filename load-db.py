@@ -26,22 +26,32 @@ if not args.unzipped:
         if m:
             subprocess.call(['gunzip', full_path(m.group(0))])
 
-# neeed mysql_args
+# need mysql_args
 mysql_args = ['-h', args.host, '-u', args.user, '-P', args.port, args.name]
-            
+high_priority_args = ['sudo', 'nice', '-n', '-20']
+
+# setup database for faster entry
+subprocess.call([' '.join(['mysql'] + mysql_args + ['<', 'init-db.sql'])],
+                shell=True)
+
 # now go through all the sql files
 txt_files = []
-for f_name in os.listdir(args.dir_name):
+tables = []
+f_names = os.listdir(args.dir_name)
+for f_name in f_names:
     m = re.search('enwiki-.*-(\S*)\.sql$', f_name)
     if m:
         # get the file name
         sql_file = full_path(m.group(0))
         name = m.group(1)
+        tables.append(name)
         txt_file = full_path(name + '.txt')
         txt_files.append(txt_file)
-        
-        print('Creating', txt_file, 'from', sql_file)
-        subprocess.call(['xmlfileutils/sql2txt', '-s', sql_file, '-t', txt_file])
+
+        if name + '.txt' not in f_names:
+            print('Creating', txt_file, 'from', sql_file)
+            subprocess.call(high_priority_args +
+                            ['xmlfileutils/sql2txt', '-s', sql_file, '-t', txt_file])
 
         # get the table initialization commands from the .sql file
         with open(full_path(f_name), 'r') as f:
@@ -60,6 +70,12 @@ for f_name in os.listdir(args.dir_name):
                     else:
                         commands.append(line)
 
+        # switch to MyISAM to make it faster (fine because are doing read only)
+        commands.append('ALTER TABLE `' + name + '` ENGINE=MyISAM;\n')
+
+        # include command to disable keys
+        commands.append('ALTER TABLE `' + name + '` DISABLE KEYS;\n')
+
         # write the commands to a temp file
         tmp_file_name = full_path('tmp.sql')
         with open(tmp_file_name, 'w') as f:
@@ -75,4 +91,12 @@ for f_name in os.listdir(args.dir_name):
 
 # write the data to the table
 print('Writing the data to', args.name)
-subprocess.call(['mysqlimport', '--local'] + mysql_args + txt_files)
+subprocess.call(high_priority_args +
+                ['mysqlimport', '--local', '--default-character-set=utf8', '--use-threads=4'] +
+                mysql_args + txt_files)
+
+# re-enable indexes on all the tables
+commands = []
+with open(tmp_file_name, 'w') as f:
+    for t in tables:
+        commands.append('ALTER TABLE `' + t + '` ENABLE KEYS;\n')
