@@ -43,6 +43,12 @@ mysql> create database wikipedia;
 mysql> exit
 ```
 
+If desired, in your `my.cnf` file (possibly in `/etc/my.cnf`...running `$ mysql
+--help` will tell where it might be) add the following line.
+```
+innodb_buffer_pool_size=0
+```
+
 Now, `load-db.py` depends on one of the scripts in `xmlfileutils`.  So inside
 `xmlfileutils` run `make`.  Now you can run `load-db.py` to extract the files
 and load them into the MySQL instance quickly.  Run:
@@ -54,4 +60,8 @@ $ load-db.py <dir>
 Where `<dir>` is the location where you downloaded the table dumps.
 
 After running `load-db.py`, you should restart the sever to reinitialize some of
-the global SQL variables that were changed for the import.
+the global SQL variables that were changed for the import.  To shut it down, run
+
+```
+$ mysqladmin -u root shutdown
+```

@@ -31,7 +31,7 @@ mysql_args = ['-h', args.host, '-u', args.user, '-P', args.port, args.name]
 high_priority_args = ['sudo', 'nice', '-n', '-20']
 
 # setup database for faster entry
-subprocess.call([' '.join(['mysql'] + mysql_args + ['<', 'init-db.sql'])],
+subprocess.call([' '.join(['mysql'] + mysql_args + ['<', 'init-db-old.sql'])],
                 shell=True)
 
 # now go through all the sql files
@@ -86,9 +86,6 @@ for f_name in f_names:
         cmd = ' '.join(['mysql'] + mysql_args + ['<', tmp_file_name])
         subprocess.call([cmd], shell=True)
 
-        # delete the tmp file
-        subprocess.call(['rm', tmp_file_name])
-
 # write the data to the table
 print('Writing the data to', args.name)
 subprocess.call(high_priority_args +
@@ -99,4 +96,10 @@ subprocess.call(high_priority_args +
 commands = []
 with open(tmp_file_name, 'w') as f:
     for t in tables:
-        commands.append('ALTER TABLE `' + t + '` ENABLE KEYS;\n')
+        f.write('ALTER TABLE `' + t + '` ENABLE KEYS;\n')
+cmd = ' '.join(['mysql'] + mysql_args + ['<', tmp_file_name])
+subprocess.call([cmd], shell=True)
+
+
+# delete the tmp file
+subprocess.call(['rm', tmp_file_name])
