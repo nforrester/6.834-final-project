@@ -31,7 +31,7 @@ mysql_args = ['-h', args.host, '-u', args.user, '-P', args.port, args.name]
 high_priority_args = ['sudo', 'nice', '-n', '-20']
 
 # setup database for faster entry
-subprocess.call([' '.join(['mysql'] + mysql_args + ['<', 'init-db-old.sql'])],
+subprocess.call([' '.join(['mysql'] + mysql_args + ['<', 'init-db.sql'])],
                 shell=True)
 
 # now go through all the sql files
