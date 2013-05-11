@@ -1,13 +1,12 @@
 6.834-final-project
 ===================
 
-Final project for 6.834 @troyastorino and @nforrester.
-
+[Troy Astorino](https://github.com/troyastorino)'s and [Neil Forrester](https://github.com/nforrester)'s final project for 6.834.
 
 ## Dependencies
 
 * python3
-* mysql-python (from pip)
+* pymysql3 (on pip)
 
 ## Training on Wikipedia
 
@@ -33,14 +32,8 @@ Downloading all these files will take some time.
 
 ### Loading the data into a MySQL database
 
-The `.sql` dumps must be extracted.  Move all the files into their own folder,
-and run:
-
-```
-$ gunzip *.sql
-```
-
-You also need to create a MySQL database to store the data in. We called ours
+The script `load-db.py` will load the data into a MySQL instance. First, you
+need to create a MySQL database to store the file in. We called ours
 `wikipedia`. Assuming you've successfully installed MySQL, do the following:
 
 ```
@@ -50,14 +43,12 @@ mysql> create database wikipedia;
 mysql> exit
 ```
 
-Now you can import the data into the MySQL database. The MySQL instance started
-with `$ mysqld_safe` should still be running.  (Whenever you do want to stop it,
-run `$ mysqladmin -u root shutdown`.) Go to the folder with all the `.sql` files
-and run:
+Now, `load-db.py` depends on one of the scripts in `xmlfileutils`.  So inside
+`xmlfileutils` run `make`.  Now you can run `load-db.py` to extract the files
+and load them into the MySQL instance quickly.  Run:
 
 ```
-$ for f in `find . -name '*.sql'`; do mysql -v -u root wikipedia $f; done
+$ load-db.py <dir>
 ```
 
-The verbose option is included in the command because it takes an _incredibly_
-long time, and you don't want to feel like nothing is happening for that long.
+Where `<dir>` is the location where you downloaded the table dumps.
