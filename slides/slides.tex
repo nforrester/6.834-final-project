@@ -20,25 +20,53 @@
 \end{frame}
 
 \begin{frame}
-  \title{The 6 degrees of Wikipedia Game}
+  \frametitle{The 6 degrees of Wikipedia Game}
 
-% image of Chewbacca to Tussock (grass)
+\begin{columns}
+\begin{column}{0.45\textwidth}
+  \includegraphics[width=2.25in]{img/chewbacca.png}
+\end{column}
+
+\begin{column}{0.1\textwidth}
+$$ \Longrightarrow $$
+\end{column}
+
+\begin{column}{0.45\textwidth}
+  \includegraphics[width=2.25in]{img/tussock.png}
+\end{column}
+
+\end{columns}
+
 \end{frame}
 
 \begin{frame}
-  \title{Connection to co-occurences}
-% Constraints on the problem make fetching expensive
-% high cost action makes similar situation to co-occurences
+  \frametitle{Connection to co-occurences}
+
+\begin{itemize}
+  \item To fairly compete against a human, must fetch webpages \\
+    \hspace{0.3in}$\longrightarrow$ expensive action
+
+  \item Co-occurence model useful when have a search action is costly
+\end{itemize}
+
 \end{frame}
 
 \begin{frame}
-  \title{Category Graph as Knowledge Graph}
-% all wikipedia articles in categories (less categories than articles)
-% use categories to inform search
+  \frametitle{Category Graph as Knowledge Graph}
+\begin{itemize}
+  \item Wikipedia articles divided into categories, gives knowledge of Wikipedia
+    structure
+  \item For an algorithm, a category graph can be the analog to a human's
+    knowledge
+    
+  \item Use structure of category graph to inform search, as humans use
+    relations between concepts
+
+\end{itemize}
 \end{frame}
 
 \begin{frame}
-  \title{Probability that an article is in a category}
+  \frametitle{Probability that an article is in a category}
 
 \[P(t_i \in c_j | t_i = [w_1, w_2, \dots, w_n]) = \frac{P(t_i = [w_1, w_2,
   \dots, w_n] | t_i \in c_j) P(t_i \in c_j)}{P(t_i = [w_1, w_2, \dots, w_n])}\]
@@ -46,7 +74,7 @@
 \end{frame}
 
 \begin{frame}
-\title{Assume independence of words}
+\frametitle{Assume independence of words}
 
 \begin{multline*}
 P(t_i = [w_1, w_2, \dots, w_n] | t_i \in c_j) \\
@@ -60,7 +88,7 @@ P(t_i = [w_1, w_2, \dots, w_n] | t_i \in c_j) \\
 \end{frame}
 
 \begin{frame}
-\title{Training data}
+\frametitle{Training data}
 
 \[P(w_l \in t | t \in c_j) \propto \displaystyle \sum_{t \in c_j} \sum_l 
     \delta (w_l \in t)\]
@@ -77,7 +105,21 @@ such that
 \begin{frame}
 \frametitle{Search strategy}
 
-% how we are using category graph path and generality of categories to inform search
+% The basic heuristic the algorithm uses to inform search is the shortest paths on
+% the category graph between the current article and the goal article. This should
+% naturally send the algorithm moving towards more general categories when it is
+% farther from the goal article, and towards more specific articles when it is
+% closer to the goal article. This is a good general strategy similar to what a
+% human does, so this tendency is reinforced by explicitly encoding a weighting to
+% move in this fashion. A centrality measure is used as an analog for the
+% generality of a category, likely the eigenvector centrality or PageRank
+% centrality, depending on whether the category graph is analyzed as a directed
+% graph or an undirected graph. Thus, the algorithm incorporates the shortest path
+% between the initial and goal articles and information on category generality in
+% order to choose the target categories for the next link.  The algorithm then
+% chooses the target categories based on the calculated probability of the
+% articles being in those categories.
+
 \end{frame}
 
 \begin{frame}
@@ -101,5 +143,12 @@ such that
 
 \begin{frame}
   \frametitle{Current Status}
+  \begin{itemize}
+  \item Loading database of Wikipedia pages, categories, and links has been much
+    more difficult and taken much longer than expected (thank you Eric for
+    helping us out!)
+    \item Thoroughly thinking script to ensure that don't make a costly mistake
+  \end{itemize}
+
 \end{frame}
 \end{document}
