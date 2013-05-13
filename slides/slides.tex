@@ -68,8 +68,18 @@ $$ \Longrightarrow $$
 \begin{frame}
   \frametitle{Probability that an article is in a category}
 
-\[P(t_i \in c_j | t_i = [w_1, w_2, \dots, w_n]) = \frac{P(t_i = [w_1, w_2,
-  \dots, w_n] | t_i \in c_j) P(t_i \in c_j)}{P(t_i = [w_1, w_2, \dots, w_n])}\]
+\begin{multline*}
+P(t_i \in c_j | t_i = [w_1, w_2, \dots, w_n]) \\
+\hspace{-1in}= \frac{P(t_i = [w_1, w_2,
+  \dots, w_n] | t_i \in c_j) P(t_i \in c_j)}{P(t_i = [w_1, w_2, \dots, w_n])}
+\end{multline*}
+
+\begin{itemize}
+  \item $t_i$ - Title of an $\text{article}_i$
+  \item $c_j$ - $\text{Category}_j$
+  \item $w_k$ - $\text{Word}_k$
+\end{itemize}
+
 
 \end{frame}
 
@@ -90,10 +100,10 @@ P(t_i = [w_1, w_2, \dots, w_n] | t_i \in c_j) \\
 \begin{frame}
 \frametitle{Training data}
 
-\[P(w_l \in t | t \in c_j) \propto \displaystyle \sum_{t \in c_j} \sum_l 
-    \delta (w_l \in t)\]
+\[P(w_k \in t | t \in c_j) \propto \displaystyle \sum_{t \in c_j} \sum_{w_l \in t}
+    \delta (w_k = w_l)\]
 such that
-\[\displaystyle \sum_l P(w_l \in t | t \in c_j) = 1\]
+\[\displaystyle \sum_k P(w_k \in t | t \in c_j) = 1\]
 
 \vspace{2em}
 
