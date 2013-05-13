@@ -1,0 +1,105 @@
+\documentclass{beamer}
+
+\title{6 Degrees of Wikipedia}
+\author{Troy Astorino, Neil Forrester}
+\date{April 10, 2013}
+\institute[6.834 -- MIT]{Cognitive Robotics \\ Massachusetts Institute of Technology}
+
+\usepackage{graphicx}
+\usepackage{amsmath}
+
+\usetheme{CambridgeUS}
+\usecolortheme{beaver}
+\setbeamertemplate{section in toc}[square]
+%\setbeamercolor{section number projected}[bg=black, fg=red]
+\setbeamertemplate{navigation symbols}{} % remove navigation symbols
+
+\begin{document}
+\begin{frame}
+  \maketitle
+\end{frame}
+
+\begin{frame}
+  \title{The 6 degrees of Wikipedia Game}
+
+% image of Chewbacca to Tussock (grass)
+\end{frame}
+
+\begin{frame}
+  \title{Connection to co-occurences}
+% Constraints on the problem make fetching expensive
+% high cost action makes similar situation to co-occurences
+\end{frame}
+
+\begin{frame}
+  \title{Category Graph as Knowledge Graph}
+% all wikipedia articles in categories (less categories than articles)
+% use categories to inform search
+\end{frame}
+
+\begin{frame}
+  \title{Probability that an article is in a category}
+
+\[P(t_i \in c_j | t_i = [w_1, w_2, \dots, w_n]) = \frac{P(t_i = [w_1, w_2,
+  \dots, w_n] | t_i \in c_j) P(t_i \in c_j)}{P(t_i = [w_1, w_2, \dots, w_n])}\]
+
+\end{frame}
+
+\begin{frame}
+\title{Assume independence of words}
+
+\begin{multline*}
+P(t_i = [w_1, w_2, \dots, w_n] | t_i \in c_j) \\
+\begin{aligned}
+& = P(w_1 \in t_i \cap w_2 \in t_i \cap \dots \cap w_n \in t_i | t_i \in c_j) \\
+& \approx P(w_1 \in t_i | t_i \in c_j) P(w_2 \in t_i | t_i \in c_j) \cdots P(w_n
+\in t_i | t_i \in c_j) \\
+\end{aligned}
+\end{multline*}
+
+\end{frame}
+
+\begin{frame}
+\title{Training data}
+
+\[P(w_l \in t | t \in c_j) \propto \displaystyle \sum_{t \in c_j} \sum_l 
+    \delta (w_l \in t)\]
+such that
+\[\displaystyle \sum_l P(w_l \in t | t \in c_j) = 1\]
+
+\vspace{2em}
+
+\[P(t_i \in c_j) = \frac{\text{\# of articles in } c_j}{\text{\# of articles}}\]
+
+\end{frame}
+
+
+\begin{frame}
+\frametitle{Search strategy}
+
+% how we are using category graph path and generality of categories to inform search
+\end{frame}
+
+\begin{frame}
+\frametitle{Limiting scope of Wikipedia}
+
+\begin{itemize}
+\item Consider only the $x$ most viewed articles. Only include categories that
+  these articles are in.
+
+\item Consider only the top $x$ categories ranked by number of pages in the
+  category. Only include pages in those categories.
+
+\item Consider only the top $x$ categories ranked by number of subcategories in the
+  category. Only include pages in those categories.
+
+\item Consider only articles with more than $x$ words. Only include categories
+  those pages are in.
+\end{itemize}
+
+\end{frame}
+
+\begin{frame}
+  \frametitle{Current Status}
+\end{frame}
+\end{document}

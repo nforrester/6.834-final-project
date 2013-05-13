@@ -22,3 +22,6 @@
 *.aux
 *.log
 *.out
+*.snm
+*.nav
+*.toc
