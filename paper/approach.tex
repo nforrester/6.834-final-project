@@ -108,18 +108,18 @@ results.
 The value of $P(w_1 \in t_i | t_i \in c_j)$ is based off of training data.
 During training, the correspondences between the words in article titles and
 categories those articles belong to are calculated. This calculation is
-completed by counting how often a word $w_l$ appears in article titles $t$ that
+completed by counting how often a word $w_k$ appears in article titles $t$ that
 are in category $c_j$. 
 
-\[P(w_l \in t | t \in c_j) \propto \displaystyle \sum_{t \in c_j} \sum_l 
-    \delta (w_l \in t)\]
+\[P(w_k \in t | t \in c_j) \propto \displaystyle \sum_{t \in c_j} \sum_{w_l \in t}
+    \delta_{w_k} (w_l)\]
 such that
-\[\displaystyle \sum_l P(w_l \in t | t \in c_j) = 1\]
+\[\displaystyle \sum_k P(w_k \in t | t \in c_j) = 1\]
 
 The $\delta$ function means:
-\[\delta (w_l \in t) = \begin{cases}
-  1 & \text{if } w_l \in t \\
-  0 & \text{if } w_l \notin t \\
+\[\delta_{w_k} (w_l) = \begin{cases}
+  1 & \text{if } w_k = w_l  \\
+  0 & \text{if } w_k \neq w_l \\
 \end{cases} \]
 
 $P(t_i \in c_j)$ is also based off of training data.  This value is simple to

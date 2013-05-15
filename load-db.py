@@ -53,6 +53,8 @@ for f_name in f_names:
             subprocess.call(high_priority_args +
                             ['xmlfileutils/sql2txt', '-s', sql_file, '-t', txt_file])
 
+            # TODO: filter text files to remove unwanted cols and data
+
         # get the table initialization commands from the .sql file
         with open(full_path(f_name), 'r') as f:
             commands = []

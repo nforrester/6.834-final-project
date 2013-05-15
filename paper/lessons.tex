@@ -1,0 +1,71 @@
+
+Unfortunately, the data on Wikipedia turned out to be more than could be managed
+in the time we allotted to the project. It was determined that only the
+\texttt{page}, \texttt{category}, \texttt{pagelinks}, and \texttt{categorylinks}
+tables were needed. These tables were all available from the WikiMedia dumps
+site. As the total size of these downloads was less than 10 GB, and there has
+been a significant amount of research done on the Wikipedia graph, it seemed
+feasible that a training algorithm could run over the course of a day or two on
+this data.
+
+Although downloading and extracting this data into the original \texttt{.sql}
+data files did not pose a problem, loading the data into a database was an
+unexpected time drain. Because there was so much data available, it was judged
+that that it must be loaded into database software in order to be usable. The
+data needed to be sorted and filtered to a manageable size in order to be
+processed, and, as super-computing clusters with ~100 GB of RAM were not
+accessible, the data had to be loaded into a database software. Optimizing this
+process of loading the data into a database was an unexpected, and somewhat
+painful, learning process. MySQL is the database back-end used by WikiMedia
+projects, so it was decided to use MySQL as the database to train from. The
+first attempt to import data was taking hours upon hours and not making
+significant progress, so various optimizations for data loading were explored.
+The successful optimizations included:
+
+\begin{itemize}
+\item Converting the \texttt{.sql} data files (which are composed of a series of
+  SQL commands) to tab-delimited data files via a text processing script
+\item Customizing the configuration settings of a MySQL database (memory
+  allocation, etc) to support mass imports
+\item Changing the table engine to one that is better for mass imports and
+  read-only operations (MyISAM instead of InnoDB)
+\item Temporarily disabling table indexing while inserting data, and then
+  re-enabling it for the entire table when it has loaded
+\end{itemize}
+
+Another optimization that was promising but was not been explored was splitting
+the data into multiple files and paralleling the import.
+
+Unfortunately, even with these optimizations and the use of a desktop kindly
+provided by Eric Timmons, the insert operation completed without enough time to
+successfully process the data.  Contributing to this, table indexing
+needed to be re-enabled in order to speed processing, but the re-enabling
+process took a prohibitively long amount of time.
+
+Looking at the data after it was imported (although not indexed), it became
+clear that many of these data files included data that was unnecessary to the
+project.  For example, the \texttt{page} table included information on
+discussion pages and user pages, information that is irrelevant to our project.
+If the training algorithm and the table schema had been more clearly thought
+through before the data was imported, filtering could have been added to the
+text-processing scripts that would have deleted unnecessary data, massively
+reducing time. 
+
+In summary, it was a surprise that import into database software would have been
+a limiting factor in this kind of training. It had been assumed that filtering
+and understanding a data-set would have been simplest once that data had been
+loaded into a database software, but clearly database software runs into
+limitations in a non-linear fashion as the size of the data scales. In
+hindsight, it is clear to see that developing a deeper understanding of the
+problem space before attempting to load the data would have allowed the problem
+to tractable in the time allocated to the project. It has given a valuable
+lesson for future projects: when dealing with a large enough amount of data that
+the label ``big data'' could conceivably be applied, there will be many
+unexpected bottlenecks in the data processing chain. These problems should be a
+unproportionaly larger extra time buffer than is typically allocated to
+programming projects, and the approach to the problem must be thoroughly
+understood before attempting implementation. It perhaps teaches a broader
+lesson: that lean and agile development techniques are not as applicable to
+software problems that place limitations on the computing hardware. It is more
+important to perform pre-implementation planning on programming problems that
+will be hardware limited.

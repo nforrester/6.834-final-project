@@ -16,10 +16,10 @@ SET @256mb=268435356;
 SET @128mb=268435356;
 
 -- MyISAM settings
-SET GLOBAL bulk_insert_buffer_size=@1gb;
-SET GLOBAL key_buffer_size=@1gb;
-SET GLOBAL sort_buffer_size=@1gb;
-SET GLOBAL myisam_sort_buffer_size=@1gb;
+SET GLOBAL bulk_insert_buffer_size=@2gb;
+SET GLOBAL key_buffer_size=@2gb;
+SET GLOBAL sort_buffer_size=@2gb;
+SET GLOBAL myisam_sort_buffer_size=@2gb;
 SET GLOBAL max_allowed_packet=@512mb;
 SET GLOBAL read_buffer_size=@512mb;
 SET GLOBAL read_rnd_buffer_size=@512mb;
