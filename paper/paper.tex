@@ -1,0 +1,333 @@
+\documentclass{article}
+
+\usepackage[colorlinks=true]{hyperref}
+\usepackage{amsmath}
+\usepackage{setspace}
+
+\title{6 Degrees of Wikipedia}
+\author{Neil Forrester, Troy Astorino \\ 16.412J/6.834J -- Cognitive Robotics}
+\date{May 15, 2013}
+
+\begin{document}
+\maketitle
+\doublespacing
+\tableofcontents
+\section{Goal}
+For our project, we attempted to write a computer program to effectively play the game
+\href{http://en.wikipedia.org/wiki/Wikipedia:Six_degrees_of_Wikipedia}{6 degrees of Wikipedia},
+operating under similar constraints as a human.
+6 degrees of Wikipedia is a race to navigate as fast as possible between two
+random Wikipedia articles only by clicking on the links in the body of an article.
+For example, a game round might require navigation from the article entitled ``Chewbacca'' to the article on ``Tussock (grass)''.
+The player must first click on a body link in the ``Chewbacca'' article,
+and after that a link on the article that the first page linked to,
+and then another link on the new article,
+and continuing in such a manner until the player reaches the goal article.
+This algorithm should be able to competitively race against a human player.
+
+\section{Constraints}
+The algorithm must be constrained to perform under similar circumstances to
+those a human player must perform under. If this was not the case, the algorithm
+would have an unfair advantage over a human player in a race. In this context,
+unfair seems an arbitrary and nebulous concept. Unfair shall be taken to mean
+two things:
+
+\begin{itemize}
+\item The algorithm must access articles at the same speed that a human can. As
+  it is running, the algorithm must fetch each webpage it is examining from the
+  Wikipedia servers. This is a significant limitation in speed, especially if
+  the computer running the algorithm is connected to the internet over Wi-Fi.
+  Because this page fetch is very expensive in comparison to other operations,
+  it makes it important to carefully consider which link to click on.
+
+\item The algorithm cannot use stored structures that would be completely
+  impossible for a human to have. For instance, the fastest algorithm would use
+  a pre-computed mapping of the shortest paths between all pairs on the Wikipedia
+  article graph. The Wikipedia article graph is a directed graph, where each
+  article is a node and each link is an edge from the node for the linking
+  article to the node for the linked article. This is the kind of information
+  that is not at all comparable to what a human could, and would make a race
+  between a human and the algorithm quite boring. 
+\end{itemize}
+
+Additionally, the second meaning of unfair above aligns with computational
+constraints on this kind of project. The all-pairs shortest-paths example
+discussed elucidates this. There are about 4.5 million articles in the English
+Wikipedia. This means storing the shortest paths for all pairs would require
+storing $(4.5 \text{ million})^2 \approx 20 \text{ trillion}$ paths. Even
+assuming that only 100 bytes would be needed for each path (which is an
+underestimate), this would require over 1 petabyte of storage. This kind of
+requirement is unrealistic for this project.
+
+Although of course those computation requirements could be eased by
+approximations, that sort of approach wouldn't be in line with the spirit of the
+problem, which is to face the same kind of problem a human would.
+
+\section{Approach}
+\subsection{Category Graph}
+When playing this game, humans use their internal conceptual hierarchy to inform
+search. They click on links that they think will bring them to concepts closer
+to those on the goal page. The conceptual hierarchy can be thought of as a
+concept graph, or knowledge graph. In Wikipedia articles can belong to
+categories, and categories can have subcategories, and further subcategories.
+These categories can be used to build a category graph: each category is a node,
+and an edge connects each category and subcategory. This category graph can act
+as an analog to the human knowledge graph.
+
+The algorithm can use the category graph to inform search. If the algorithm
+knows the categories that the current article is in, and the categories that the
+goal article is in, it can calculate which categories are likely to be on the shortest path
+between the initial article and the goal article, and navigate to links it
+thinks are in categories on that path.
+
+\subsection{Article-Category Correspondence}
+Once on the Wikipedia page for an article, the titles of the articles the links
+on the page travel to are observable. The algorithm needs to know the probability
+that the article with title $t_i$ belongs to category $c_j$, $P(t_i \in c_j)$.
+The information the algorithm observers to calculate this probability is the
+list of words $[w_1, w_2, \dots, w_n]$ that makes up $t_i$.  So, it is the following
+that must be computed:
+
+\[P(t_i \in c_j) = P(t_i \in c_j | t_i = [w_1, w_2, \dots, w_n])\]
+
+This expression can be transformed through the application of Bayes' Rule.
+
+\[P(t_i \in c_j | t_i = [w_1, w_2, \dots, w_n]) = \frac{P(t_i = [w_1, w_2,
+  \dots, w_n] | t_i \in c_j) P(t_i \in c_j)}{P(t_i = [w_1, w_2, \dots, w_n])}\]
+
+The expression for $P(t_i = [w_1, w_2, \dots, w_n] | t_i \in c_j)$ can be
+simplified. It is reasonable to assume that, conditioned on the category an
+article title is in, the appearance of a word in a title is independent of
+other words in the title. This assumption makes computation tractable.
+
+\begin{multline*}
+P(t_i = [w_1, w_2, \dots, w_n] | t_i \in c_j) \\
+\begin{aligned}
+& = P(w_1 \in t_i \cap w_2 \in t_i \cap \dots \cap w_n \in t_i | t_i \in c_j) \\
+& \approx P(w_1 \in t_i | t_i \in c_j) P(w_2 \in t_i | t_i \in c_j) \cdots P(w_n
+\in t_i | t_i \in c_j) \\
+\end{aligned}
+\end{multline*}
+
+Although this conditional independence assumption is certainly not entirely
+accurate, hopefully it is close enough to reality to not negatively affect the
+results.
+
+The value of $P(w_1 \in t_i | t_i \in c_j)$ is based off of training data.
+During training, the correspondences between the words in article titles and
+categories those articles belong to are calculated. This calculation is
+completed by counting how often a word $w_k$ appears in article titles $t$ that
+are in category $c_j$. 
+
+\[P(w_k \in t | t \in c_j) \propto \displaystyle \sum_{t \in c_j} \sum_{w_l \in t}
+    \delta_{w_k} (w_l)\]
+such that
+\[\displaystyle \sum_k P(w_k \in t | t \in c_j) = 1\]
+
+The $\delta$ function means:
+\[\delta_{w_k} (w_l) = \begin{cases}
+  1 & \text{if } w_k = w_l  \\
+  0 & \text{if } w_k \neq w_l \\
+\end{cases} \]
+
+$P(t_i \in c_j)$ is also based off of training data.  This value is simple to
+calculate:
+
+\[P(t_i \in c_j) = \frac{\text{\# of articles in } c_j}{\text{\# of articles}}\]
+
+The algorithm now has computable expressions for everything needed in the
+calculation of $P(t_i \in c_j)$. 
+
+\subsection{Search Strategy}
+The basic heuristic the algorithm uses to inform search is the shortest paths on
+the category graph between the current article and the goal article. This should
+naturally send the algorithm moving towards more general categories when it is
+farther from the goal article, and towards more specific articles when it is
+closer to the goal article. This is a good general strategy similar to what a
+human does, so this tendency is reinforced by explicitly encoding a weighting to
+move in this fashion.
+
+Unfortunately, the category graph itself is very large, and this task is complicated
+by the fact that categories and articles may (and usually do) fall into multiple parent categories.
+As each step in the exploration of the category graph is expensive,
+requiring a call to the Wikipedia API,
+or waiting for the SQL database to finish assembling itself (more on that later),
+it is therefore impractical to completely explore the category graph between two articles.
+
+Therefore, the approach we take is to traverse the category graph
+(starting from our start and end articles),
+up to a certain depth in the direction of parent categories.
+The categories the goal page falls into are given high priority.
+Parent categories of these categories are given slightly lower priority,
+grandparents get still lower priority, and so on as specificity decreases.
+A similar traversal is begun at the start article,
+but with more general categories given higher priority than specific categories.
+The most general category indirectly containing the goal article is given slightly higher priority
+than the most general category indirectly containing the start category.
+If the trees happen to intersect, the high priority assignment from the goal tree
+takes precedent over the low priority assignment from the start tree.
+A possible optimization we could make if we had more time would be to increase the priority
+of the direct path from the start to the goal if the trees intersect.
+Unfortunately, we were not able to fully explore the space of possible variations on our design.
+
+Once categories are assigned priorities, the search strategy is very simple, and resembles best-first search.
+The algorithm maintains two lists of articles, a list of visited articles,
+and a list of unvisited articles which were linked to from the visited articles.
+The algorithm then predicts what categories the unvisited articles are in,
+and picks the article in the highest priority category to visit next.
+The goal page is given the highest priority of all when a link to it is found,
+causing the algorithm to terminate.
+
+\section{Scope Limitations}
+Graph analysis on all of the data available on Wikipedia is overwhelming for the
+computing hardware available for a class project. In order to make this more
+feasible, some limitations were placed on the parts of Wikipedia to be used in
+the analysis. Some options that we explored are listed below. These
+limitations could be implemented individually, or in some combination:
+
+\begin{itemize}
+\item Consider only the $x$ most viewed articles. Only include categories that
+  these articles are in.
+
+\item Consider only the top $x$ categories ranked by number of pages in the
+  category. Only include pages in those categories.
+
+\item Consider only the top $x$ categories ranked by number of subcategories in the
+  category. Only include pages in those categories.
+
+\item Consider only articles with more than $x$ words (articles with less than
+  that can be considered stubs even if they haven't been labeled as such, and
+  small articles probably haven't been edited as much, and as such aren't as
+  important). Only include categories those pages are in.
+\end{itemize}
+
+\section{Lessons learned}
+While we ultimately did not achieve our objective of creating a reliable
+Artificial Intelligence for playing 6 Degrees of Wikipedia,
+we did learn a lot in the process.
+
+\subsection{Lessons related to the MySQL databases}
+Unfortunately, the data on Wikipedia turned out to be more than could be managed
+in the time we allotted to the project. It was determined that only the
+\texttt{page}, \texttt{category}, \texttt{pagelinks}, and \texttt{categorylinks}
+tables were needed. These tables were all available from the WikiMedia dumps
+site. As the total size of these downloads was less than 10 GB, and there has
+been a significant amount of research done on the Wikipedia graph, it seemed
+feasible that a training algorithm could run over the course of a day or two on
+this data.
+
+Although downloading and extracting this data into the original \texttt{.sql}
+data files did not pose a problem, loading the data into a database was an
+unexpected time drain. Because there was so much data available, it was judged
+that that it must be loaded into database software in order to be usable. The
+data needed to be sorted and filtered to a manageable size in order to be
+processed, and, as super-computing clusters with ~100 GB of RAM were not
+accessible, the data had to be loaded into a database software. Optimizing this
+process of loading the data into a database was an unexpected, and somewhat
+painful, learning process. MySQL is the database back-end used by WikiMedia
+projects, so it was decided to use MySQL as the database to train from. The
+first attempt to import data was taking hours upon hours and not making
+significant progress, so various optimizations for data loading were explored.
+The successful optimizations included:
+
+\begin{itemize}
+\item Converting the \texttt{.sql} data files (which are composed of a series of
+  SQL commands) to tab-delimited data files via a text processing script
+\item Customizing the configuration settings of a MySQL database (memory
+  allocation, etc) to support mass imports
+\item Changing the table engine to one that is better for mass imports and
+  read-only operations (MyISAM instead of InnoDB)
+\item Temporarily disabling table indexing while inserting data, and then
+  re-enabling it for the entire table when it has loaded
+\end{itemize}
+
+Another optimization that was promising but was not been explored was splitting
+the data into multiple files and paralleling the import.
+
+Unfortunately, even with these optimizations and the use of a desktop kindly
+provided by Eric Timmons, the insert operation completed without enough time to
+successfully process the data.  Contributing to this, table indexing
+needed to be re-enabled in order to speed processing, but the re-enabling
+process took a prohibitively long amount of time.
+
+Looking at the data after it was imported (although not indexed), it became
+clear that many of these data files included data that was unnecessary to the
+project.  For example, the \texttt{page} table included information on
+discussion pages and user pages, information that is irrelevant to our project.
+If the training algorithm and the table schema had been more clearly thought
+through before the data was imported, filtering could have been added to the
+text-processing scripts that would have deleted unnecessary data, massively
+reducing time. 
+
+In summary, it was a surprise that import into database software would have been
+a limiting factor in this kind of training. It had been assumed that filtering
+and understanding a data-set would have been simplest once that data had been
+loaded into a database software, but clearly database software runs into
+limitations in a non-linear fashion as the size of the data scales. In
+hindsight, it is clear to see that developing a deeper understanding of the
+problem space before attempting to load the data would have allowed the problem
+to tractable in the time allocated to the project. It has given a valuable
+lesson for future projects: when dealing with a large enough amount of data that
+the label ``big data'' could conceivably be applied, there will be many
+unexpected bottlenecks in the data processing chain. These problems should be a
+unproportionaly larger extra time buffer than is typically allocated to
+programming projects, and the approach to the problem must be thoroughly
+understood before attempting implementation. It perhaps teaches a broader
+lesson: that lean and agile development techniques are not as applicable to
+software problems that place limitations on the computing hardware. It is more
+important to perform pre-implementation planning on programming problems that
+will be hardware limited.
+
+\subsection{Lessons related to the traversal algorithm}
+Due to the difficulty with the MySQL databases, we were never able to implement or train
+the Article-Category Correspondence heuristic that would have allowed the traversal algorithm
+to guess at the categories of Wikipedia articles based on their titles.
+As such, the traversal algorithm was reduced to making a query to the Wikipedia API
+for every single link it saw (whether it actually wished to navigate to that link or not).
+This severely limited the performance of the algorithm, and while it was able to successfully
+find a path between articles relatively close together
+(it found a path from the article ``Solar storm of 1859'' to the article ``Albert Einstein'',
+passing through the articles for four other physicists),
+it took an inordinately long time to work in the general case.
+The lack of an easy to compute heuristic served to reinforce the importance of having one.
+It is not enough to be able to compute (or fetch from the internet) an exact solution to a problem.
+In many cases an approximate answer arrived at quickly is better than an exact answer arrived at slowly.
+
+At least as important as lessons about databases and heuristics were the lessons we learned about project and algorithm selection.
+Our initial vision was that we would use the co-occurrence model to predict
+what links we would find in an article based on the words in it's title,
+and that this would inform our search of Wikipedia.
+This didn't seem unreasonable: we could view an article as a container of things,
+the title of the article as the surface layer of the container,
+and fetching the contents of the article as meticulously emptying the container.
+The correspondence between Wikipedia traversal and hidden object search seemed clear.
+
+Unfortunately, while the co-occurrence model initially seemed like a good fit for the problem of playing 6 Degrees of Wikipedia,
+when we started working out the details it was suddenly much less obvious how we ought to apply it.
+Even if we could predict with 50\% accuracy which articles were linked to from a page merely by examining it's title
+(an optimistic assumption) how would that information ultimately help us?
+If the page didn't link directly to the goal page, would we perform this procedure recursively, making guesses upon guesses?
+After 6 such guesses, accuracy would drop to $0.5^6 = 0.016$, and be entirely useless.
+Furthermore, unlike a spatial mapping problem, Wikipedia is an abstract graph,
+and unless you have a lifetime's worth of general knowledge, you have no idea how close you are to your goal until you actually arrive.
+If you don't stumble onto a direct link to the goal page, knowing where you are and where you could go is of no use whatsoever.
+
+What we needed was a heuristic that could tell us approximately how close we were to our goal.
+Fortunately, Wikipedia articles are categorized, and so we exploited this categorization information (by the methods previously described)
+as a substitute for the general knowledge possessed by a human player.
+The problem was now reduced to categorizing pages based on their titles.
+While this is a much clearer problem, it unfortunately deviates from what the co-occurrence model is really designed to do.
+The co-occurrence model is for predicting the contents of a container, not deciding how to classify an object,
+so we had to significantly rejigger it into something quite different from what we originally intended,
+and from what we described in our Advanced Lecture.
+More unfortunate still were the previously described difficulties with the databases of training data.
+In light of all this, we are surprised that we got as far as we did.
+
+The moral of the story is that more planning and detail work up front is a good idea,
+especially when trying to apply techniques to problems they weren't intended to tackle.
+If we had thought more carefully about how we intended to accomplish our task before jumping right into it,
+we probably would have seen some of these difficulties coming, and chosen something less ambitious.
+The project was fascinating, and so we don't regret choosing it (too much),
+but it would have been nice to have picked a more readily achievable goal.
+
+\end{document}

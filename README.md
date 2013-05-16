@@ -65,3 +65,12 @@ the global SQL variables that were changed for the import.  To shut it down, run
 ```
 $ mysqladmin -u root shutdown
 ```
+
+## Traversing Wikipedia
+
+The traversal algorithm is in `wiki-fetch.py` (so named because it evolved
+from code that was originally intended merely to interface with Wikipedia's API).
+If you execute the file as written, it will navigate from `Solar storm of 1859`
+to `Albert Einstein`. See the bottom of the file for examples of how to call
+the more important functions. Documentation is a little thin, as the whole project
+has been a little rushed, but hopefully you can get the general idea.

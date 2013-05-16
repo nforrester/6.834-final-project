@@ -160,8 +160,7 @@ def navigate(start, end):
         return path
       to_visit = to_visit + list(map(lambda page: (page, current[0], preference(page)), get_links(current[0])))
 
-#print(navigate('Solar storm of 1859', 'Albert Einstein'))
-print(navigate('Richmond (Quebec provincial electoral district)', 'Sexual Intercourse'))
+print(navigate('Solar storm of 1859', 'Albert Einstein'))
 
 #print(kill_nowiki(expandtemplates(page_content('Balfour Stewart'))['expandtemplates']['*']))
 
